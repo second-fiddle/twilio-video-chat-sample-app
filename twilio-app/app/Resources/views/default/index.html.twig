@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-4 offset-md-4">
+      <div class="login-form bg-light mt-4 p-4">
+        <form action="/web/enter" method="POST" class="row g-3" target="_blank">
+          <h4 class="text-center">Video Room Enter</h4>
+          <div class="col-12">
+            <label>ユーザー名</label>
+            <input type="text" name="username" class="form-control" placeholder="ユーザー名" required>
+            <small>本番環境では認証情報からセットする</small>
+          </div>
+          <div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="enterMethod" id="enter-method-1" value="1" checked>
+              <label class="form-check-label" for="enter-method-1">ルーム作成（初回） </label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="enterMethod" id="enter-method-2" value="2">
+              <label class="form-check-label" for="enter-method-2">既存ルームに入室(2人目以降) </label>
+            </div>
+          </div>
+          <div class="col-12">
+            <div id="room-name-wrapper">
+              <label>ルーム名</label>
+              <input type="text" name="roomname" id="room-name" class="form-control" placeholder="ルーム名" required="true">
+            </div>
+            <div id="room-sid-wrapper" class="d-none">
+              <div class="form-group">
+                <label>ビデオルーム SID</label>
+                <input type="text" name="videoRoomSid" id="video-room-sid" class="form-control room-sid" placeholder="RMXXXXXX">
+              </div>
+              <div class="form-group">
+                <label>チャットーム SID</label>
+                <input type="text" name="chatRoomSid" id="chat-room-sid" class="form-control room-sid" placeholder="CHXXXXXXX">
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-dark float-end">入室</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block javascripts %}
+<script type="text/javascript">
+  $(() => {
+    $('input[name="enterMethod"]').on('change', (e) => {
+      $('#room-name-wrapper, #room-sid-wrapper').toggleClass('d-none');
+        $('#room-name').attr('required', e.target.value == '1');
+        $('.room-sid').attr('required', e.target.value == '2');
+    });
+  });
+</script>
+{% endblock %}
+

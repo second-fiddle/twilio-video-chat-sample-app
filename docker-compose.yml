@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  app:
+    build: ./docker/app
+    container_name: twilio-app
+    ports:
+      - 80:80
+    privileged: true
+    volumes:
+      - ./docker/app/conf.d/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./docker/app/php.ini:/usr/local/etc/php/php.ini
+      - ./twilio-app:/var/www/html

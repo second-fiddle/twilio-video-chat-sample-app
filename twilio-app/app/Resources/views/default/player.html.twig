@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<nav class="fixed-top navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <span class="navbar-brand">Twilio Player</span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>    
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item text-white me-2">
+          <div class="fw-bold">[username] </div>
+          <div>{{ username }}</div>
+        </li>
+        <li class="nav-item text-white me-2">
+          <div class="fw-bold">[room name] </div>
+          <div>{{ roomname }}</div>
+          <input type="hidden" id="token" value="{{ token }}">
+        </li>
+        <li class="nav-item text-white me-2">
+          <div class="fw-bold">[video room sid] </div>
+          <div>{{ videoRoomSid }}</div>
+          <input type="hidden" id="video-room-sid" value="{{ videoRoomSid }}">
+        </li>       
+        <li class="nav-item text-white me-2">
+          <div class="fw-bold">[conversations sid] </div>
+          <div>{{ chatRoomSid }}</div>
+          <input type="hidden" id="chat-room-sid" value="{{ chatRoomSid }}">
+        </li>
+        <li class="nav-item text-white">
+          <div class="fw-bold">[participant sid] </div>
+          <div>{{ participantSid }}</div>
+          <input type="hidden" id="participant-sid" value="{{ participantSid }}">
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="player-container h-100 overflow-hidden">
+  <div class="row h-100" style="margin-top: 56px;">
+    <div id="video-container" class="d-flex align-content-start" style="width: calc(100% - 300px);">
+      <div id="{{ participantSid }}" class="video">
+        <video id="my-room" autoplay muted="true"></video>
+      </div>
+    </div>
+    <div id="chat-container" style="width: 300px;">
+      chat area
+    </div>
+</div>
+<div class="fixed-bottom mt-auto py-3 bg-light">
+  <div class="row">
+    <div class="col-7">
+      <div class="d-flex justify-content-center">
+        <button id="btn-mute" class="btn">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <button id="btn-exit" class="btn ms-5">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+        <button id="btn-video" class="btn ms-5">
+          <i class="fas fa-video"></i>
+        </button>
+      </div>
+    </div>
+    <div class="col-3">
+      <button id="btn-screen-share" class="btn">
+        <i class="fas fa-share-alt"></i>
+      </button>
+      <button id="btn-chat" class="btn ms-5">
+        <i class="fas fa-comment-dots"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  const videoSetup = () => {
+    // ルームに接続
+    TwilioVideoPlayer.connect("my-room", "{{ token }}", "{{ roomname }}");
+    // ビデオクリックイベント
+    $('#btn-video').on('click', (e) => {
+      if (!TwilioVideoPlayer.videoRoom) {
+        return;
+      }
+      // ボタンの状態でマイクの状態を判断する
+      const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i');
+      const videoOn = $icon.hasClass('fa-video');
+      TwilioVideoPlayer.localStream.getVideoTracks().forEach((track) => track.enabled = !videoOn);
+
+      // ボタンのアイコンを切り替え
+      if (videoOn) {
+        $icon.removeClass('fa-video').addClass('fa-video-slash');
+      } else {
+        $icon.removeClass('fa-video-slash').addClass('fa-video');
+      }
+    });
+    // 退室アイコンクリックイベント
+    $('#btn-exit').on('click', (e) => {
+      TwilioVideoPlayer.disconnect();
+    });
+    // ミュートクリックイベント
+    $('#btn-mute').on('click', (e) => {
+      if (!TwilioVideoPlayer.videoRoom) {
+        return;
+      }
+
+      // ボタンの状態でマイクの状態を判断する
+      const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i');
+      const audioOn = $icon.hasClass('fa-microphone');
+      TwilioVideoPlayer.videoRoom.localParticipant.audioTracks.forEach((audioTrack) => 
+          audioOn ? audioTrack.disable() : audioTrack.enable());
+      if (audioOn) {
+        $icon.removeClass('fa-microphone').addClass('fa-microphone-slash');
+      } else {
+        $icon.removeClass('fa-microphone-slash').addClass('fa-microphone');
+      }
+    });
+    // チャットアイコンクリックイベント
+    $('#btn-chat').on('click', (e) => {
+      $('#chat-container').fadeToggle({
+        done: () => {
+          // ボタンのアイコンを切り替え
+          const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i')
+          if ($('#chat-container').is(':visible')) {
+            $icon.removeClass('far').addClass('fas');
+          } else {
+            $icon.removeClass('fas').addClass('far');
+          }
+        }
+      })
+    });
+  }
+  window.onload = videoSetup;
+
+</script>
+<script type="text/javascript" src="{{ asset('js/video-player.js') }}" defer></script>
+<script type="text/javascript" src="{{ asset('js/chat.js') }}" defer></script>
+<style>
+video {
+  width: 300px;
+  height: 300px;
+}
+</style>
+{% endblock %}
