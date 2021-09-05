@@ -13,32 +13,32 @@ const TwilioVideoPlayer = {
     // プレビュー画面の表示
     navigator.mediaDevices.getUserMedia({video: true, audio: true})
       .then(stream => {
-          document.getElementById(roomElementId).srcObject = stream;
-          this.localStream = stream;
+        document.getElementById(roomElementId).srcObject = stream;
+        this.localStream = stream;
       });
 
     // 部屋に入室
     Twilio.Video.connect(token, { name: roomname })
       .then(room => {
-          this.videoRoom = room;
+        this.videoRoom = room;
 
-          // すでに入室している参加者を表示
-          room.participants.forEach(this.participantConnected);
+        // すでに入室している参加者を表示
+        room.participants.forEach(this.participantConnected);
 
-          // 誰かが入室してきたときの処理
-          room.on('participantConnected', this.participantConnected);
+        // 誰かが入室してきたときの処理
+        room.on('participantConnected', this.participantConnected);
 
-          // 誰かが退室したときの処理
-          room.on('participantDisconnected', this.participantDisconnected);
+        // 誰かが退室したときの処理
+        room.on('participantDisconnected', this.participantDisconnected);
 
-          // 自分が退室したときの処理
-          room.once('disconnected', room => {
-            // Detach the local media elements
-            room.localParticipant.tracks.forEach(track => {
-              const attachedElements = track.detach();
-              attachedElements.forEach(element => element.remove());
-            });
-          });          
+        // 自分が退室したときの処理
+        room.once('disconnected', room => {
+          // Detach the local media elements
+          room.localParticipant.tracks.forEach(track => {
+            const attachedElements = track.detach();
+            attachedElements.forEach(element => element.remove());
+          });
+        });
       });
   },
   /**
@@ -54,7 +54,7 @@ const TwilioVideoPlayer = {
    */
   cameraControl(isOn) {
     this.localStream.getVideoTracks().forEach((track) => {
-        track.enabled = isOn;
+      track.enabled = isOn;
     });
 
     this.videoRoom.localParticipant.videoTracks.forEach((videoTrack) => {
@@ -103,12 +103,12 @@ const TwilioVideoPlayer = {
     div.dataset.dataParticipantSid = participant.sid;
 
     // 参加者のトラック（映像、音声など）を処理
-    participant.tracks.forEach((publication) => {
-        if (publication.isSubscribed) {
-            this.trackSubscribed(div, publication.track);
-            this.handleTrackChanged(publication.track);
-        }
-        publication.on('subscribed', this.handleTrackChanged);
+    participant.videoTrackPublications.forEach((publication) => {
+      if (publication.isSubscribed) {
+        this.trackSubscribed(div, publication.track);
+        this.handleTrackChanged(publication.track);
+      }
+      publication.on('subscribed', TwilioVideoPlayer.handleTrackChanged);
     });
 
     // 参加者の映像が届いたとき
@@ -130,12 +130,12 @@ const TwilioVideoPlayer = {
     div.classList.add('video');
 
     // 参加者のトラック（映像、音声など）を処理
-    participant.tracks.forEach((publication) => {
+    participant.videoTrackPublications.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
         this.handleTrackChanged(publication.track);
       }
-      publication.on('subscribed', this.handleTrackChanged);
+      publication.on('subscribed', TwilioVideoPlayer.handleTrackChanged);
     });
 
     // 参加者の映像が届いたとき
