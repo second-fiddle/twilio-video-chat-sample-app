@@ -45,7 +45,40 @@
       </div>
     </div>
     <div id="chat-container" style="width: 300px;">
-      chat area
+      <div id="message-send-container" class="row mt-3 me-1">
+        <div class="col-10">
+          <textarea id="message" class="w-100" rows="3"></textarea>
+        </div>
+        <div class="col-1">
+          <button id="btn-attach-file" class="btn">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          <input type="file" name="file" id="attach-file" class="d-none">
+          <button id="btn-message-send" class="btn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        <div id="message-alert-toaster" class="toast d-flex align-items-center bg-danger text-light" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-body"></div>
+          <button type="button" class="btn-close ms-auto me-2" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+      <div id="message-receive-container">
+        <div id="send-message-template" class="d-none">
+          <div class="row">
+            <div class="col-5 author"></div>
+            <div class="col-7 datetime" class=""></div>
+          </div>
+          <div class="message-content"></div>
+        </div>
+        <div id="receive-message-template" class="d-none">
+          <div class="row">
+            <div class="col-5 author"></div>
+            <div class="col-7 datetime"></div>
+          </div>
+          <div class="message-content"></div>
+        </div>
+      </div>
     </div>
 </div>
 <div class="fixed-bottom mt-auto py-3 bg-light">
@@ -64,7 +97,7 @@
       </div>
     </div>
     <div class="col-3">
-      <button id="btn-screen-share" class="btn">
+      <button id="btn-share-screen" class="btn">
         <i class="fas fa-share-alt"></i>
       </button>
       <button id="btn-chat" class="btn ms-5">
@@ -73,10 +106,20 @@
     </div>
   </div>
 </div>
+<style>
+video {
+  width: 300px;
+  height: 300px;
+}
+</style>
+{% endblock %}
+{% block javascripts %}
 <script type="text/javascript">
-  const videoSetup = () => {
-    // ルームに接続
+  $(() => {
+    // ビデオルームに接続
     TwilioVideoPlayer.connect("my-room", "{{ token }}", "{{ roomname }}");
+    // チャットルームに接続
+    TwilioChat.initialize("{{ token }}", "{{ chatRoomSid }}");
     // ビデオクリックイベント
     $('#btn-video').on('click', (e) => {
       if (!TwilioVideoPlayer.videoRoom) {
@@ -116,6 +159,10 @@
         $icon.removeClass('fa-microphone-slash').addClass('fa-microphone');
       }
     });
+    // 画面共有アイコンクリックイベント
+    $('#btn-share-screen').on('click', (e) => {
+      TwilioVideoPlayer.shareScreen();
+    });
     // チャットアイコンクリックイベント
     $('#btn-chat').on('click', (e) => {
       $('#chat-container').fadeToggle({
@@ -130,16 +177,83 @@
         }
       })
     });
-  }
-  window.onload = videoSetup;
+    // ファイル添付ファイルアイコンクリックイベント
+    $('#btn-attach-file').on('click', () => {
+      $('#attach-file').trigger('click');
+    });
+    // ファイル選択
+    $('#attach-file').on('change', (e) => {
+      if (e.target.files === 0) {
+        return;
+      }
 
+      const size_16mb = 16 * 1024 * 1024;
+      const file = e.target.files[0];
+      if (file.size > size_16mb) {
+        const toastEl = document.getElementById('message-alert-toaster');
+        toastEl.querySelector('.toast-body').textContent = 'ファイルサイズが大きすぎます。16MB以下のファイルを選択してください。';
+        (new bootstrap.Toast(toastEl)).show();
+        return;
+      }
+      TwilioChat.sendAttachFile(file);
+    });
+    // メッセージ送信
+    $('#btn-message-send').on('click', (e) => {
+      const message = $('#message').val();
+      if (!message.trim()) {
+        return;
+      }
+      TwilioChat.sendMessage(message);
+      $('#message').val('');
+    });
+    // メッセージ受信
+    // TwilioChat.jsからのコールバック
+    $(document).on('twilio-message-received', async (e, state) => {
+      const isSelfMessage = $('#participant-sid').val() == state.participantSid;
+      const template = isSelfMessage ? $('#send-message-template').clone() : $('#receive-message-template').clone();
+
+      template.removeClass('d-none')
+               .removeAttr('message-template')
+               .attr('id', `message-${state.participantSid}`);
+      template.find('.author').text(state.author);
+      const timestamp = state.timestamp;
+      const zeroPadding = (value) => ('00' + value).slice(-2);
+      template.find('.datetime').text(`${timestamp.getFullYear()}/${zeroPadding(timestamp.getMonth()+1)}/${zeroPadding(timestamp.getDate())} ${zeroPadding(timestamp.getHours())}:${zeroPadding(timestamp.getMinutes())}`);
+      if (state.body) {
+        // メッセージ送信
+        template.find('.message-content').html(state.body.replace(/\r?\n/g, '<br>'));
+      } else {
+        // ファイル添付
+        const downloadUrl = await state.media.getContentTemporaryUrl();
+        const fileLink = $(`<a>`, {
+          href: downloadUrl,
+          target: '_blank',
+          title: state.media.state.filename,
+          download: state.media.state.filename
+        })
+        .text(state.media.state.filename)
+        .on('click', (e) => {
+          // フィルダウンロード
+          e.preventDefault();
+          fetch(e.target.href)
+            .then(resp => resp.blob())
+            .then(blob => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = url;
+              a.download = e.target.title;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+            });
+        });
+        template.find('.message-content').append(fileLink);
+      }
+      template.appendTo('#message-receive-container');
+    });
+  });
 </script>
-<script type="text/javascript" src="{{ asset('js/video-player.js') }}" defer></script>
-<script type="text/javascript" src="{{ asset('js/chat.js') }}" defer></script>
-<style>
-video {
-  width: 300px;
-  height: 300px;
-}
-</style>
+<script type="text/javascript" src="{{ asset('js/video-player.js') }}?x={0|rand:999}" defer></script>
+<script type="text/javascript" src="{{ asset('js/chat.js') }}?x={0|rand:999}" defer></script>
 {% endblock %}

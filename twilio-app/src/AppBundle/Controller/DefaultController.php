@@ -19,63 +19,7 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        // $twilioSid = $this->container->getParameter('twilio_sid');
-        // $wtilioToken = $this->container->getParameter('twilio_token');
-        // $twilio = new Client($twilioSid, $wtilioToken);
-
-        // // ルーム名
-        // $roomName = "room@001";
-
-        // ルーム作成
-        // $room = $twilio->video->v1->rooms->create([
-        //             "uniqueName" => $roomName,
-        //         ]);
-        // ↓ 外部公開したらコールバックを適用すべき。
-        //   参考：https://qiita.com/mobilebiz/items/8666058c3df1d0515fae 
-        // "statusCallback" => "https://xxxxxx", 
-
-        // 登録内容確認
-        // $arr = [$room->sid, $room->uniqueName, $room->url];
-        // echo '<pre>';
-        // print_r($arr);
-        // echo '</pre>';
-
-        // ルーム取得（ROOM SID）
-        // $room = $twilio->video->v1->rooms($room->sid)->fetch();
-        // ルーム取得（ROOM UniqueName）
-        // $room = $twilio->video->v1->rooms($room->uniqueName)->fetch();
-
-        // ルームステータス変更
-        // $room = $twilio->video->v1->rooms($room->sid)->update("completed");
-
-        // ルーム一覧取得
-        // $rooms = $twilio->video->v1->rooms->read([
-        //            "dateCreatedAfter" => "2021-08-25T00:00:00Z",
-        //            "status" => "completed"
-        //        ],
-        //        1000
-        // );
-        // foreach ($rooms as $room) {
-        //     if (is_null($room->endTime)) {
-        //         $startTime = '';
-        //         $endTime = '';
-        //     } else {
-        //         $startTime = clone $room->endTime;
-        //         $startTime->modify("-$room->duration seconds");
-        //         $startTime = $startTime->format('Y-m-d H:i:s');
-        //         $endTime = $room->endTime->format('Y-m-d H:i:s');
-        //     }
-        //     $value = "sid=$room->sid, uniqueName=$room->uniqueName, status=$room->status, duration=$room->duration, start_time=$startTime, end_time=$endTime";
-        //     echo '<pre>';
-        //     print_r($value);
-        //     echo '</pre>';
-        // }
-
-        // replace this example code with whatever you need
-        return $this->render('default/index.html.twig', [
-            // 'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
-            // 'room_name' => $roomName,
-        ]);
+        return $this->render('default/index.html.twig', []);
     }
     /**
      * @Route("/enter")
