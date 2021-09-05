@@ -123,15 +123,13 @@ video {
     TwilioChat.initialize("{{ token }}", "{{ chatRoomSid }}");
     // カメラクリックイベント
     $('#btn-camera').on('click', (e) => {
-      if (!TwilioVideoPlayer.videoRoom) {
+      if (!TwilioVideoPlayer.isConnected()) {
         return;
       }
       // ボタンの状態でカメラの状態を判断する
       const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i');
       const videoOn = $icon.hasClass('fa-video');
-      TwilioVideoPlayer.localStream.getVideoTracks().forEach((track) => track.enabled = !videoOn);
-      TwilioVideoPlayer.videoRoom.localParticipant.videoTracks.forEach((videoTrack) => 
-          videoOn ? videoTrack.disable() : videoTrack.enable());
+      TwilioVideoPlayer.cameraControl(!videoOn);
 
       // ボタンのアイコンを切り替え
       if (videoOn) {
@@ -150,14 +148,13 @@ video {
     });
     // ミュートクリックイベント
     $('#btn-mute').on('click', (e) => {
-      if (!TwilioVideoPlayer.videoRoom) {
+      if (!TwilioVideoPlayer.isConnected()) {
         return;
       }
       // ボタンの状態でマイクの状態を判断する
       const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i');
       const audioOn = $icon.hasClass('fa-microphone');
-      TwilioVideoPlayer.videoRoom.localParticipant.audioTracks.forEach((audioTrack) => 
-          audioOn ? audioTrack.disable() : audioTrack.enable());
+      TwilioVideoPlayer.micControl(!audioOn);
       if (audioOn) {
         $icon.removeClass('fa-microphone').addClass('fa-microphone-slash');
       } else {

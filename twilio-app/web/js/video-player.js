@@ -2,7 +2,7 @@ const TwilioVideoPlayer = {
   // Twilio Video JS SDK
   videoRoom: null,
   localStream: null,
-  shareScreen: null,
+  screenTrack: null,
   /**
    * ルームに接続する
    * @param {string} roomElementId ビデオを表示するHTMLのid属性
@@ -28,13 +28,6 @@ const TwilioVideoPlayer = {
           // 誰かが入室してきたときの処理
           room.on('participantConnected', this.participantConnected);
 
-          room.on('track-enabled', () => {
-            console.log('track-enabled');
-          });
-          room.on('track-disabled', () => {
-            console.log('track-disabled');
-          });
-
           // 誰かが退室したときの処理
           room.on('participantDisconnected', this.participantDisconnected);
 
@@ -47,6 +40,33 @@ const TwilioVideoPlayer = {
             });
           });          
       });
+  },
+  /**
+   * 接続済みの状態を返す
+   * @returns boolean true: 接続済み, false: 切断
+   */
+  isConnected() {
+    return this.videoRoom;
+  },
+  /**
+   * カメラのON/OFFを行う
+   * @param {boolean} isOn true: onにする, false: offにする
+   */
+  cameraControl(isOn) {
+    this.localStream.getVideoTracks().forEach((track) => {
+      track.enabled = isOn;
+    });
+    this.videoRoom.localParticipant.videoTracks.forEach((videoTrack) => {
+      isOn ? videoTrack.enable() : videoTrack.disable()
+    });
+  },
+  /**
+   * マイクのON/OFFを行う
+   * @param {boolean} isOn true: onにする, false: offにする
+   */
+  micControl(isOn) {
+    this.videoRoom.localParticipant.audioTracks.forEach((audioTrack) => 
+    isOn ? audioTrack.enable() : audioTrack.disable());
   },
   /**
    * 画面を共有する
@@ -85,9 +105,10 @@ const TwilioVideoPlayer = {
     participant.tracks.forEach((publication) => {
         if (publication.isSubscribed) {
             this.trackSubscribed(div, publication.track);
-            // this.handleTrackChanged(publication.track, participant);
+            this.handleTrackChanged(publication.track);
         }
         // publication.on('subscribed', (track) => this.handleTrackChanged(track, participant));
+        publication.on('subscribed', this.handleTrackChanged);
     });
 
     // 参加者の映像が届いたとき
@@ -112,7 +133,9 @@ const TwilioVideoPlayer = {
     participant.tracks.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
+        this.handleTrackChanged(publication.track);
       }
+      publication.on('subscribed', this.handleTrackChanged);
     });
 
     // 参加者の映像が届いたとき
@@ -151,8 +174,16 @@ const TwilioVideoPlayer = {
   /**
    * リモート側のマイク・カメラが切り替わったとき
    * @param {Track} track トラック
-   * @param {Participant } participant 参加者
    */
+  handleTrackChanged(track) {
+    track.on('disabled', () => {
+      console.log('remote media off')
+    });
+    track.on('enabled', () => {
+      console.log('remote media on')
+    });
+  },
+
   // handleTrackChanged: (track, participant) => {
   //   const dom = document.getElementById(participant.sid);
 
