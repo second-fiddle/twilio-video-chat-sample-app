@@ -130,11 +130,13 @@ const TwilioVideoPlayer = {
     div.classList.add('video');
 
     // 参加者のトラック（映像、音声など）を処理
-    if (publication.isSubscribed) {
-      this.trackSubscribed(div, publication.track);
-      this.handleTrackChanged(publication.track);
-    }
-    publication.on('subscribed', this.handleTrackChanged);
+    participant.tracks.forEach((publication) => {
+      if (publication.isSubscribed) {
+        this.trackSubscribed(div, publication.track);
+        this.handleTrackChanged(publication.track);
+      }
+      publication.on('subscribed', this.handleTrackChanged);
+    });
 
     // 参加者の映像が届いたとき
     participant.on('trackSubscribed', (track) => TwilioVideoPlayer.trackSubscribed(div, track));
