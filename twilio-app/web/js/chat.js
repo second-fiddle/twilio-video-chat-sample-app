@@ -6,28 +6,11 @@ const TwilioChat = {
     /**
      * チャットルーム状態変更イベント
      */
-    client.on("connectionStateChanged", async (state) => {
-      console.log("connectionStateChanged", state);
-      if (state === 'connected') {
-        // const conversation = await client.getConversationBySid(sid);
-        // await conversation.join().catch((err) => console.log(err));
-      }
-    });
+    client.on("connectionStateChanged", async (state) => {});
     /**
      * チャットルーム接続イベrンと
      */
-    client.on("conversationJoined", (conversation) => {
-      console.log("joined");
-      // conversation.getMessages()
-      //     .then((messagePaginator) => {
-      //       console.log(messagePaginator);
-      //     })
-      //     .catch((err) => console.log(err));
-      // conversation.on('messageAdded', (message) => {
-      //   console.log(message);
-      // });
-      // conversation.sendMessage('hello');
-    });
+    client.on("conversationJoined", (conversation) => {});
 
     const conversation = await client.getConversationBySid(sid);
     await conversation.join().catch((err) => console.log(err));
@@ -46,7 +29,7 @@ const TwilioChat = {
    * @param {string} message メッセージ
    */
   sendMessage(message) {
-    this.conversation.sendMessage(message).catch((err) => console.log(err));
+    this.conversation.sendMessage(message);
   },
   /**
    * ファイルを添付する。
@@ -55,7 +38,12 @@ const TwilioChat = {
   sendAttachFile(file) {
     const formData = new FormData();
     formData.append('userfile', file);
-    this.conversation.sendMessage(formData).catch((err) => console.log(err));
-
+    this.conversation.sendMessage(formData);
+  },
+  /**
+   * チャットルームから退室する
+   */
+  disconnect() {
+    this.client.shutdown();
   }
 };

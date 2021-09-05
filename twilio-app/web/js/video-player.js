@@ -10,7 +10,6 @@ const TwilioVideoPlayer = {
    * @param {string} roomname ルーム名
    */
   connect(roomElementId, token, roomname) {
-    return;
     // プレビュー画面の表示
     navigator.mediaDevices.getUserMedia({video: true, audio: true})
       .then(stream => {
@@ -29,14 +28,24 @@ const TwilioVideoPlayer = {
           // 誰かが入室してきたときの処理
           room.on('participantConnected', this.participantConnected);
 
+          room.on('track-enabled', () => {
+            console.log('track-enabled');
+          });
+          room.on('track-disabled', () => {
+            console.log('track-disabled');
+          });
+
           // 誰かが退室したときの処理
           room.on('participantDisconnected', this.participantDisconnected);
 
           // 自分が退室したときの処理
-          room.once('disconnected', () => window.close());
-      })
-      .catch(err => {
-          console.error(err);
+          room.once('disconnected', room => {
+            // Detach the local media elements
+            room.localParticipant.tracks.forEach(track => {
+              const attachedElements = track.detach();
+              attachedElements.forEach(element => element.remove());
+            });
+          });          
       });
   },
   /**
@@ -48,8 +57,6 @@ const TwilioVideoPlayer = {
         .then(stream => {
           this.screenTrack = new Twilio.Video.LocalVideoTrack(stream.getTracks()[0]);
           this.videoRoom.localParticipant.publishTrack(this.screenTrack);
-        }).catch(() => {
-            alert('Could not share the screen.')
         });
     } else {
       this.videoRoom.localParticipant.unpublishTrack(this.screenTrack);

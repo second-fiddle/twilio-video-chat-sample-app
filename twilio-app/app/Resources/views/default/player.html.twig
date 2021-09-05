@@ -91,7 +91,7 @@
         <button id="btn-exit" class="btn ms-5">
           <i class="fas fa-sign-out-alt"></i>
         </button>
-        <button id="btn-video" class="btn ms-5">
+        <button id="btn-camera" class="btn ms-5">
           <i class="fas fa-video"></i>
         </button>
       </div>
@@ -115,17 +115,18 @@ video {
 {% endblock %}
 {% block javascripts %}
 <script type="text/javascript">
+  let disconnected = false;
   $(() => {
     // ビデオルームに接続
     TwilioVideoPlayer.connect("my-room", "{{ token }}", "{{ roomname }}");
     // チャットルームに接続
     TwilioChat.initialize("{{ token }}", "{{ chatRoomSid }}");
-    // ビデオクリックイベント
-    $('#btn-video').on('click', (e) => {
+    // カメラクリックイベント
+    $('#btn-camera').on('click', (e) => {
       if (!TwilioVideoPlayer.videoRoom) {
         return;
       }
-      // ボタンの状態でマイクの状態を判断する
+      // ボタンの状態でカメラの状態を判断する
       const $icon = $(e.target).is('i') ? $(e.target): $(e.target).find('i');
       const videoOn = $icon.hasClass('fa-video');
       TwilioVideoPlayer.localStream.getVideoTracks().forEach((track) => track.enabled = !videoOn);
@@ -141,7 +142,11 @@ video {
     });
     // 退室アイコンクリックイベント
     $('#btn-exit').on('click', (e) => {
+      e.preventDefault();
+      TwilioChat.disconnect();
       TwilioVideoPlayer.disconnect();
+      disconnected = true;
+      window.close();
     });
     // ミュートクリックイベント
     $('#btn-mute').on('click', (e) => {
@@ -252,8 +257,22 @@ video {
       }
       template.appendTo('#message-receive-container');
     });
+    // 画面を閉じたときに退室する（ビデオ、チャット）
+    $(window).on('beforeunload', (e) => {
+      if (!disconnected) {
+        TwilioChat.disconnect();
+        TwilioVideoPlayer.disconnect();
+      }
+    });
+    // 別のページを表示したときに退室する（ビデオ、チャット）
+    $(window).on('pagehide', (e) => {
+      if (!disconnected) {
+        TwilioChat.disconnect();
+        TwilioVideoPlayer.disconnect();
+      }
+    });
   });
 </script>
-<script type="text/javascript" src="{{ asset('js/video-player.js') }}?x={0|rand:999}" defer></script>
-<script type="text/javascript" src="{{ asset('js/chat.js') }}?x={0|rand:999}" defer></script>
+<script type="text/javascript" src="{{ asset('js/video-player.js') }}?{{ random(0, 100) }}" defer></script>
+<script type="text/javascript" src="{{ asset('js/chat.js') }}?{{ random(0, 100) }}" defer></script>
 {% endblock %}
