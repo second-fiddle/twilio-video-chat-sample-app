@@ -39,7 +39,7 @@ const TwilioVideoPlayer = {
         room.once('disconnected', room => {
           // Detach the local media elements
           room.localParticipant.tracks.forEach((publication) => {
-            const attachedElements = publication.detach();
+            const attachedElements = publication.trach.detach();
             attachedElements.forEach((element) => element.remove());
           });
         });
