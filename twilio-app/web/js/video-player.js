@@ -58,7 +58,7 @@ const TwilioVideoPlayer = {
     });
 
     this.videoRoom.localParticipant.videoTracks.forEach((videoTrack) => {
-      isOn ? videoTrack.enable() : videoTrack.disable()
+      isOn ? videoTrack.track.enable() : videoTrack.track.disable()
     });
   },
   /**
@@ -67,7 +67,7 @@ const TwilioVideoPlayer = {
    */
   micControl(isOn) {
     this.videoRoom.localParticipant.audioTracks.forEach((audioTrack) => 
-      isOn ? audioTrack.enable() : audioTrack.disable());
+      isOn ? audioTrack.track.enable() : audioTrack.track.disable());
   },
   /**
    * 画面を共有する
@@ -103,7 +103,7 @@ const TwilioVideoPlayer = {
     div.dataset.dataParticipantSid = participant.sid;
 
     // 参加者のトラック（映像、音声など）を処理
-    participant.videoTrackPublications.forEach((publication) => {
+    participant.tracks.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
         this.handleTrackChanged(publication.track);
@@ -130,7 +130,7 @@ const TwilioVideoPlayer = {
     div.classList.add('video');
 
     // 参加者のトラック（映像、音声など）を処理
-    participant.videoTrackPublications.forEach((publication) => {
+    participant.tracks.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
         this.handleTrackChanged(publication.track);
