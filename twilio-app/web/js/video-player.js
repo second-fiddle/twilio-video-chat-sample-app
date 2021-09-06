@@ -7,16 +7,17 @@ const TwilioVideoPlayer = {
   /**
    * ルームに接続する
    * @param {string} roomElementId ビデオを表示するHTMLのid属性
+   * @param {string} username ユーザー名
    * @param {string} token アクセストークン
    * @param {string} roomname ルーム名
    */
-  connect(roomElementId, token, roomname) {
+  connect(roomElementId, username, token, roomname) {
     this.myVideoSelector = roomElementId;
     // プレビュー画面の表示
     Twilio.Video.createLocalVideoTrack({video: true, audio: true})
-      .then((track) => {
+      .then(async (track) => {
         const localMediaContainer = document.getElementById(roomElementId);
-        this.addNotifyMediaIcons(localMediaContainer, roomElementId);
+        this.addNotifyMedia(localMediaContainer, roomElementId, username);
         localMediaContainer.appendChild(track.attach());
       });
     // 部屋に入室
@@ -54,12 +55,14 @@ const TwilioVideoPlayer = {
    * 対象の要素にメディアの状態を表示するアイコンを追加する
    * @param {string} element 追加要素
    * @param {String} participantSid 参加者SID
+   * @param {Srging} username ユーザー名
    */
-  addNotifyMediaIcons (element, participantSid) {
-    // const notifyVideoIcon = document.createElement('i')
-    // notifyVideoIcon.classList.add('fas', 'fa-video', 'nootify-video');
-    // notifyVideoIcon.id = `notify-video-${participantSid}`;
-    // element.appendChild(notifyVideoIcon);
+  addNotifyMedia(element, participantSid, username) {
+    const notifyVideoIcon = document.createElement('span')
+    notifyVideoIcon.classList.add('d-none');
+    notifyVideoIcon.textContent = username;
+    notifyVideoIcon.id = `notify-video-${participantSid}`;
+    element.appendChild(notifyVideoIcon);
     const notifyMicIcon = document.createElement('i')
     notifyMicIcon.classList.add('fas', 'fa-microphone', 'notify-mic');
     notifyMicIcon.id = `notify-mic-${participantSid}`;
@@ -144,7 +147,7 @@ const TwilioVideoPlayer = {
     // 参加者の映像が切れたとき
     participant.on('trackUnsubscribed', this.trackUnsubscribed);
 
-    TwilioVideoPlayer.addNotifyMediaIcons(div, participant.sid);
+    TwilioVideoPlayer.addNotifyMedia(div, participant.sid, participant.identity);
     document.getElementById('video-container').appendChild(div);
   },
   /**
@@ -171,7 +174,7 @@ const TwilioVideoPlayer = {
 
     // 参加者の映像が切れたとき
     participant.on('trackUnsubscribed', TwilioVideoPlayer.trackUnsubscribed);
-    TwilioVideoPlayer.addNotifyMediaIcons(div, participant.sid);
+    TwilioVideoPlayer.addNotifyMedia(div, participant.sid, participant.identity);
     document.getElementById('video-container').appendChild(div);
   },
   /**
@@ -213,18 +216,32 @@ const TwilioVideoPlayer = {
         $(`#notify-mic-${participant.sid}`).removeClass('fa-microphone').addClass('fa-microphone-slash');
       }      
     }
+    const videoHandler = (isOn) => {
+      if (isOn) {
+        $(`#notify-video-${participant.sid}`).addClass('d-none');
+      } else {
+        $(`#notify-video-${participant.sid}`).removeClass('d-none');
+      }      
+    }
     // 参加中のメンバーがすでにマイクをOFF
     if (track.kind === 'audio' && !track.isEnabled) {
       micIconHandler(false);
     }
+    if (track.kind === 'video' && !track.isEnabled) {
+      videoHandler(false);
+    }
     track.on('disabled', () => {
       if (track.kind === 'audio') {
         micIconHandler(false);
+      } else if (track.kind === 'video') {
+        videoHandler(false);
       }
     });
     track.on('enabled', () => {
       if (track.kind === 'audio') {
         micIconHandler(true);
+      } else if (track.kind === 'video') {
+        videoHandler(true);
       }
     });
   },
