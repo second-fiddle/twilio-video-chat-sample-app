@@ -1,7 +1,7 @@
 const TwilioChat = {
   client: null,
   conversation: null,
-  async initialize(token, sid) {
+  async initialize(participantSid, token, sid) {
     const client = await Twilio.Conversations.Client.create(token);
     /**
      * チャットルーム状態変更イベント

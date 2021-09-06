@@ -123,7 +123,7 @@ video {
     // ビデオルームに接続
     TwilioVideoPlayer.connect("{{ participantSid }}", "{{ token }}", "{{ roomname }}");
     // チャットルームに接続
-    TwilioChat.initialize("{{ token }}", "{{ chatRoomSid }}");
+    TwilioChat.initialize("{{ participantSid }}", "{{ token }}", "{{ chatRoomSid }}");
     // カメラクリックイベント
     $('#btn-camera').on('click', (e) => {
       if (!TwilioVideoPlayer.isConnected()) {
