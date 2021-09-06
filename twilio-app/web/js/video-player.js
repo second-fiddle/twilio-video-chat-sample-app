@@ -1,7 +1,6 @@
 const TwilioVideoPlayer = {
   // Twilio Video JS SDK
   videoRoom: null,
-  localStream: null,
   screenTrack: null,
   /**
    * ルームに接続する
@@ -11,11 +10,6 @@ const TwilioVideoPlayer = {
    */
   connect(roomElementId, token, roomname) {
     // プレビュー画面の表示
-    // navigator.mediaDevices.getUserMedia({video: true, audio: true})
-    //   .then(stream => {
-    //     document.getElementById(roomElementId).srcObject = stream;
-    //     this.localStream = stream;
-    //   });
     Twilio.Video.createLocalVideoTrack({video: true, audio: true})
       .then((track) => {
         const localMediaContainer = document.getElementById(roomElementId);
@@ -57,10 +51,6 @@ const TwilioVideoPlayer = {
    * @param {boolean} isOn true: onにする, false: offにする
    */
   cameraControl(isOn) {
-    // this.localStream.getVideoTracks().forEach((track) => {
-    //   track.enabled = isOn;
-    // });
-
     this.videoRoom.localParticipant.videoTracks.forEach((publication) => {
       isOn ? publication.track.enable() : publication.track.disable()
     });
@@ -188,44 +178,4 @@ const TwilioVideoPlayer = {
       console.log('remote media on')
     });
   },
-
-  // handleTrackChanged: (track, participant) => {
-  //   const dom = document.getElementById(participant.sid);
-
-  //   // TODO 未確認
-
-  //   // ミュートアイコンを表示
-  //   const muteIcon = (dom) => {
-  //       const remote_mic = document.createElement('div');
-  //       // remote_mic.id = 'remote-mic';
-  //       // remote_mic.classList.add('remote-mic');
-  //       // const mic = document.createElement('sp');
-  //       // mic.classList.add('mic-image');
-  //       // mic.style.backgroundImage = "url('./images/mic_off.png')";
-  //       // remote_mic.append(mic);
-  //       remote_mic.textContent = "mute";
-  //       dom.append(remote_mic);
-  //   };
-
-  //   if (track.kind === 'audio' && !track.isEnabled) {
-  //       // 参加中のメンバーがすでにマイクをOFFにしているのでミュートアイコンを表示
-  //       muteIcon(dom);
-  //   }
-  //   // 参加中のメンバーがマイクをOFFにしたときの処理
-  //   track.on('disabled', () => {
-  //       if (track.kind === 'audio') {
-  //           // ミュートアイコンを表示
-  //           muteIcon(dom);
-  //       }
-  //   });
-  //   // 参加中のメンバーがマイクをONにしたときの処理
-  //   track.on('enabled', () => {
-  //       if (track.kind === 'audio') {
-  //           // ミュートアイコンを削除
-  //           dom.childNodes.forEach((node) => {
-  //               if (node.id === 'remote-mic') node.remove();
-  //           });
-  //       }
-  //   });
-  // },
 };
