@@ -82,11 +82,12 @@ const TwilioVideoPlayer = {
         .then(stream => {
           this.screenTrack = new Twilio.Video.LocalVideoTrack(stream.getTracks()[0]);
           this.videoRoom.localParticipant.publishTrack(this.screenTrack);
+          this.screenTrack.mediaStreamTrack.onended = () => {
+            this.videoRoom.localParticipant.unpublishTrack(this.screenTrack);
+            this.screenTrack.stop();
+            this.screenTrack = null;
+           };
         });
-    } else {
-      this.videoRoom.localParticipant.unpublishTrack(this.screenTrack);
-      this.screenTrack.stop();
-      this.screenTrack = null;
     }
   },
   /**
