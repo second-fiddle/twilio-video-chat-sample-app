@@ -9,16 +9,16 @@ const TwilioVideoPlayer = {
    * @param {string} token アクセストークン
    * @param {string} roomname ルーム名
    */
-  connect(roomElementId, token, roomname) {
+  async connect(roomElementId, token, roomname) {
     // プレビュー画面の表示
     navigator.mediaDevices.getUserMedia({video: true, audio: true})
       .then(stream => {
         document.getElementById(roomElementId).srcObject = stream;
         this.localStream = stream;
       });
-
+    const tracks = await createLocalTracks({audio: true,　video: true }); // video: { width: 640 } サイズ指定も可能
     // 部屋に入室
-    Twilio.Video.connect(token, { name: roomname })
+    Twilio.Video.connect(token, { name: roomname, tracks: [tracks] })
       .then(room => {
         this.videoRoom = room;
 
@@ -57,8 +57,8 @@ const TwilioVideoPlayer = {
       track.enabled = isOn;
     });
 
-    this.videoRoom.localParticipant.videoTracks.forEach((videoTrack) => {
-      isOn ? videoTrack.track.enable() : videoTrack.track.disable()
+    this.videoRoom.localParticipant.videoTracks.forEach((publication) => {
+      isOn ? publication.track.enable() : publication.track.disable()
     });
   },
   /**
@@ -66,8 +66,8 @@ const TwilioVideoPlayer = {
    * @param {boolean} isOn true: onにする, false: offにする
    */
   micControl(isOn) {
-    this.videoRoom.localParticipant.audioTracks.forEach((audioTrack) => 
-      isOn ? audioTrack.track.enable() : audioTrack.track.disable());
+    this.videoRoom.localParticipant.audioTracks.forEach((publication) => 
+      isOn ? publication.track.enable() : publication.track.disable());
   },
   /**
    * 画面を共有する
