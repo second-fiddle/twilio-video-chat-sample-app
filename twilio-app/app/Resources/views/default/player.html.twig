@@ -41,7 +41,6 @@
   <div class="row h-100" style="margin-top: 56px;">
     <div id="video-container" class="d-flex align-content-start" style="width: calc(100% - 300px);">
       <div id="{{ participantSid }}" class="video">
-        <video id="my-room" autoplay muted="true"></video>
       </div>
     </div>
     <div id="chat-container" style="width: 300px;">
@@ -122,7 +121,7 @@ video {
   let disconnected = false;
   $(() => {
     // ビデオルームに接続
-    TwilioVideoPlayer.connect("my-room", "{{ token }}", "{{ roomname }}");
+    TwilioVideoPlayer.connect("{{ participantSid }}", "{{ token }}", "{{ roomname }}");
     // チャットルームに接続
     TwilioChat.initialize("{{ token }}", "{{ chatRoomSid }}");
     // カメラクリックイベント

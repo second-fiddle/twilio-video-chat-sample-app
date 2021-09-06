@@ -38,8 +38,8 @@ const TwilioVideoPlayer = {
         // 自分が退室したときの処理
         room.once('disconnected', room => {
           // Detach the local media elements
-          room.localParticipant.tracks.forEach((publication ) => {
-            const attachedElements = publication .detach();
+          room.localParticipant.tracks.forEach((publication) => {
+            const attachedElements = publication.detach();
             attachedElements.forEach((element) => element.remove());
           });
         });
@@ -57,9 +57,9 @@ const TwilioVideoPlayer = {
    * @param {boolean} isOn true: onにする, false: offにする
    */
   cameraControl(isOn) {
-    this.localStream.getVideoTracks().forEach((track) => {
-      track.enabled = isOn;
-    });
+    // this.localStream.getVideoTracks().forEach((track) => {
+    //   track.enabled = isOn;
+    // });
 
     this.videoRoom.localParticipant.videoTracks.forEach((publication) => {
       isOn ? publication.track.enable() : publication.track.disable()
