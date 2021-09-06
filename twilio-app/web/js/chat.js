@@ -13,7 +13,7 @@ const TwilioChat = {
     client.on("conversationJoined", (conversation) => {});
 
     const conversation = await client.getConversationBySid(sid);
-    await conversation.join().catch((err) => console.log(err));
+    await conversation.join().catch((err) => {});
     this.conversation = conversation;
     /**
      * メッセージ受信イベント
