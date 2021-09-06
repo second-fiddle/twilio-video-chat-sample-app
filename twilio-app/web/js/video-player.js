@@ -1,5 +1,7 @@
 const TwilioVideoPlayer = {
-  // Twilio Video JS SDK
+  // My Video Element Id
+  myVideoSelector: null,
+  // Twilio Video
   videoRoom: null,
   screenTrack: null,
   /**
@@ -9,10 +11,12 @@ const TwilioVideoPlayer = {
    * @param {string} roomname ルーム名
    */
   connect(roomElementId, token, roomname) {
+    this.myVideoSelector = roomElementId;
     // プレビュー画面の表示
     Twilio.Video.createLocalVideoTrack({video: true, audio: true})
       .then((track) => {
         const localMediaContainer = document.getElementById(roomElementId);
+        this.addNotifyMediaIcons(localMediaContainer, roomElementId);
         localMediaContainer.appendChild(track.attach());
       });
     // 部屋に入室
@@ -47,12 +51,33 @@ const TwilioVideoPlayer = {
     return this.videoRoom;
   },
   /**
+   * 対象の要素にメディアの状態を表示するアイコンを追加する
+   * @param {string} element 追加要素
+   * @param {String} participantSid 参加者SID
+   */
+  addNotifyMediaIcons (element, participantSid) {
+    // const notifyVideoIcon = document.createElement('i')
+    // notifyVideoIcon.classList.add('fas', 'fa-video', 'nootify-video');
+    // notifyVideoIcon.id = `notify-video-${participantSid}`;
+    // element.appendChild(notifyVideoIcon);
+    const notifyMicIcon = document.createElement('i')
+    notifyMicIcon.classList.add('fas', 'fa-microphone', 'notify-mic');
+    notifyMicIcon.id = `notify-mic-${participantSid}`;
+    element.appendChild(notifyMicIcon);
+  },
+  /**
    * カメラのON/OFFを行う
    * @param {boolean} isOn true: onにする, false: offにする
    */
   cameraControl(isOn) {
     this.videoRoom.localParticipant.videoTracks.forEach((publication) => {
-      isOn ? publication.track.enable() : publication.track.disable()
+      if (isOn) {
+        publication.track.enable();
+        $(`#notify-video-${this.myVideoSelector}`).removeClass('fa-video-slash').addClass('fa-video');
+      } else {
+        publication.track.disable();
+        $(`#notify-video-${this.myVideoSelector}`).removeClass('fa-video').addClass('fa-video-slash');
+      }
     });
   },
   /**
@@ -60,8 +85,15 @@ const TwilioVideoPlayer = {
    * @param {boolean} isOn true: onにする, false: offにする
    */
   micControl(isOn) {
-    this.videoRoom.localParticipant.audioTracks.forEach((publication) => 
-      isOn ? publication.track.enable() : publication.track.disable());
+    this.videoRoom.localParticipant.audioTracks.forEach((publication) => {
+      if (isOn) {
+        publication.track.enable();
+        $(`#notify-mic-${this.myVideoSelector}`).removeClass('fa-microphone-slash').addClass('fa-microphone');
+      } else {
+        publication.track.disable()
+        $(`#notify-mic-${this.myVideoSelector}`).removeClass('fa-microphone').addClass('fa-microphone-slash');
+      }
+    });
   },
   /**
    * 画面を共有する
@@ -101,9 +133,9 @@ const TwilioVideoPlayer = {
     participant.tracks.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
-        this.handleTrackChanged(publication.track);
+        this.handleTrackChanged(publication.track, participant);
       }
-      publication.on('subscribed', TwilioVideoPlayer.handleTrackChanged);
+      publication.on('subscribed', (track) => TwilioVideoPlayer.handleTrackChanged(track, participant));
     });
 
     // 参加者の映像が届いたとき
@@ -112,6 +144,7 @@ const TwilioVideoPlayer = {
     // 参加者の映像が切れたとき
     participant.on('trackUnsubscribed', this.trackUnsubscribed);
 
+    TwilioVideoPlayer.addNotifyMediaIcons(div, participant.sid);
     document.getElementById('video-container').appendChild(div);
   },
   /**
@@ -128,9 +161,9 @@ const TwilioVideoPlayer = {
     participant.tracks.forEach((publication) => {
       if (publication.isSubscribed) {
         this.trackSubscribed(div, publication.track);
-        this.handleTrackChanged(publication.track);
+        this.handleTrackChanged(publication.track, participant);
       }
-      publication.on('subscribed', TwilioVideoPlayer.handleTrackChanged);
+      publication.on('subscribed', (track) => TwilioVideoPlayer.handleTrackChanged(track, participant));
     });
 
     // 参加者の映像が届いたとき
@@ -138,7 +171,7 @@ const TwilioVideoPlayer = {
 
     // 参加者の映像が切れたとき
     participant.on('trackUnsubscribed', TwilioVideoPlayer.trackUnsubscribed);
-
+    TwilioVideoPlayer.addNotifyMediaIcons(div, participant.sid);
     document.getElementById('video-container').appendChild(div);
   },
   /**
@@ -168,14 +201,31 @@ const TwilioVideoPlayer = {
   },
   /**
    * リモート側のマイク・カメラが切り替わったとき
+   * ビデオの状態はわかるため、マイクの状態を通知する。
    * @param {Track} track トラック
+   * @param {participant} participant 参加者
    */
-  handleTrackChanged(track) {
+  handleTrackChanged(track, participant) {
+    const micIconHandler = (isOn) => {
+      if (isOn) {
+        $(`#notify-mic-${participant.sid}`).removeClass('fa-microphone-slash').addClass('fa-microphone');
+      } else {
+        $(`#notify-mic-${participant.sid}`).removeClass('fa-microphone').addClass('fa-microphone-slash');
+      }      
+    }
+    // 参加中のメンバーがすでにマイクをOFF
+    if (track.kind === 'audio' && !track.isEnabled) {
+      micIconHandler(false);
+    }
     track.on('disabled', () => {
-      console.log('remote media off')
+      if (track.kind === 'audio') {
+        micIconHandler(false);
+      }
     });
     track.on('enabled', () => {
-      console.log('remote media on')
+      if (track.kind === 'audio') {
+        micIconHandler(true);
+      }
     });
   },
 };
