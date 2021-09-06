@@ -9,34 +9,38 @@ const TwilioVideoPlayer = {
    * @param {string} token アクセストークン
    * @param {string} roomname ルーム名
    */
-  async connect(roomElementId, token, roomname) {
+  connect(roomElementId, token, roomname) {
     // プレビュー画面の表示
-    navigator.mediaDevices.getUserMedia({video: true, audio: true})
-      .then(stream => {
-        document.getElementById(roomElementId).srcObject = stream;
-        this.localStream = stream;
+    // navigator.mediaDevices.getUserMedia({video: true, audio: true})
+    //   .then(stream => {
+    //     document.getElementById(roomElementId).srcObject = stream;
+    //     this.localStream = stream;
+    //   });
+    Twilio.Video.createLocalVideoTrack({video: true, audio: true})
+      .then((track) => {
+        const localMediaContainer = document.getElementById(roomElementId);
+        localMediaContainer.appendChild(track.attach());
       });
-    const tracks = await createLocalTracks({audio: true,　video: true }); // video: { width: 640 } サイズ指定も可能
     // 部屋に入室
-    Twilio.Video.connect(token, { name: roomname, tracks: [tracks] })
-      .then(room => {
+    Twilio.Video.connect(token, {name: roomname, audio: true,　video: true})
+      .then((room) => {
         this.videoRoom = room;
 
         // すでに入室している参加者を表示
         room.participants.forEach(this.participantConnected);
 
         // 誰かが入室してきたときの処理
-        room.on('participantConnected', this.participantConnected);
+        room.once('participantConnected', this.participantConnected);
 
         // 誰かが退室したときの処理
-        room.on('participantDisconnected', this.participantDisconnected);
+        room.once('participantDisconnected', this.participantDisconnected);
 
         // 自分が退室したときの処理
         room.once('disconnected', room => {
           // Detach the local media elements
-          room.localParticipant.tracks.forEach(track => {
-            const attachedElements = track.detach();
-            attachedElements.forEach(element => element.remove());
+          room.localParticipant.tracks.forEach((publication ) => {
+            const attachedElements = publication .detach();
+            attachedElements.forEach((element) => element.remove());
           });
         });
       });
