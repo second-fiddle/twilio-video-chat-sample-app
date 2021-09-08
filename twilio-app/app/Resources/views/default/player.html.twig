@@ -41,6 +41,7 @@
   <div class="row h-100" style="margin-top: 56px;">
     <div id="video-container" class="d-flex align-content-start" style="width: calc(100% - 300px);">
       <div id="{{ participantSid }}" class="video">
+        <div id="my-video-wrapper" class="d-none"></div>
       </div>
     </div>
     <div id="chat-container" style="width: 300px;">
@@ -114,6 +115,22 @@ video {
     height: var(--video-width) * ( 3 / 4 ); /* 4:3で表示 */
     object-fit: cover;
 }
+.my-video video {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  z-index: -100;
+}
+#my-video-wrapper {
+  position: absolute;
+  top: 56px;
+  left: 0px;
+  z-index: 40;
+  background-color: black;
+  height: 248px;
+  width: 440px;
+}
+
 </style>
 {% endblock %}
 {% block javascripts %}

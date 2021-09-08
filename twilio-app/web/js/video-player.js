@@ -18,6 +18,7 @@ const TwilioVideoPlayer = {
       .then(async (track) => {
         const localMediaContainer = document.getElementById(roomElementId);
         this.addNotifyMedia(localMediaContainer, roomElementId, username);
+        localMediaContainer.classList.add('my-video');
         localMediaContainer.appendChild(track.attach());
       });
     // 部屋に入室
@@ -77,9 +78,11 @@ const TwilioVideoPlayer = {
       if (isOn) {
         publication.track.enable();
         $(`#notify-video-${this.myVideoSelector}`).removeClass('fa-video-slash').addClass('fa-video');
+        $('#my-video-wrapper').addClass('d-none');
       } else {
         publication.track.disable();
         $(`#notify-video-${this.myVideoSelector}`).removeClass('fa-video').addClass('fa-video-slash');
+        $('#my-video-wrapper').removeClass('d-none');
       }
     });
   },
